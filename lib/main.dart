@@ -5,6 +5,7 @@ import 'favouriteProducts.dart';
 import 'productDetailsPage.dart';
 import 'package:flutter_barcode_scanner/flutter_barcode_scanner.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'dart:math';
 
 void main() async {
   print('loading .env file');
@@ -191,6 +192,10 @@ class _MyHomePageState extends State<MyHomePage> {
                               child: Image.network(
                                 product.img,
                                 fit: BoxFit.cover,
+                                errorBuilder: (BuildContext context, Object exception, StackTrace? stackTrace) {
+                                  int defaultImageIndex = Random().nextInt(7) + 1;
+                                  return Image.asset('assets/images/peepo$defaultImageIndex.jpg');
+                                },
                               ),
                             ),
                             const SizedBox( width: 10 ), // Add some space between the image and the text

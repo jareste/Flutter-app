@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'product.dart';
-
+import 'dart:math';
 
 class ProductDetailsPage extends StatelessWidget {
   final Product product;
@@ -25,6 +25,10 @@ class ProductDetailsPage extends StatelessWidget {
               child: Image.network(
                 product.img,
                 fit: BoxFit.fill,
+                errorBuilder: (BuildContext context, Object exception, StackTrace? stackTrace) {
+                  int defaultImageIndex = Random().nextInt(7) + 1;
+                  return Image.asset('assets/images/peepo$defaultImageIndex.jpg');
+                },
               ),
             ),
             Text(product.price + '€',
