@@ -157,25 +157,27 @@ class _MyHomePageState extends State<MyHomePage> {
               setState(() {
                 gOrden = value;
                 switch (value) {
-                  case 'codigoasc':
-                    gProductsToShow
-                        .sort((a, b) => a.productId.compareTo(b.productId));
+                  case '1-9':
+                    gOrden = 'codigoasc';
+                    gProductsToShow.sort((a, b) => a.productId.compareTo(b.productId));
                     break;
-                  case 'codigodesc':
-                    gProductsToShow
-                        .sort((a, b) => b.productId.compareTo(a.productId));
+                  case '9-1':
+                    gOrden = 'codigodesc';
+                    gProductsToShow.sort((a, b) => b.productId.compareTo(a.productId));
                     break;
-                  case 'tituloasc':
+                  case 'A-Z':
+                    gOrden = 'tituloasc';
                     gProductsToShow.sort((a, b) => a.title.compareTo(b.title));
                     break;
-                  case 'titulodesc':
+                  case 'Z-A':
+                    gOrden = 'titulodesc';
                     gProductsToShow.sort((a, b) => b.title.compareTo(a.title));
                     break;
                 }
               });
             },
             itemBuilder: (BuildContext context) {
-              return ['codigoasc', 'codigodesc', 'tituloasc', 'titulodesc']
+              return ['1-9', '9-1', 'A-Z', 'Z-A']
                   .map((String choice) {
                 return PopupMenuItem<String>(
                   value: choice,
@@ -185,13 +187,14 @@ class _MyHomePageState extends State<MyHomePage> {
             },
           ),
           IconButton(
-            icon: Icon(Icons.brightness_6),
+            icon: const Icon(Icons.brightness_6),
             onPressed: () {
               widget.toggleTheme();
             },
           ),
+          
           IconButton(
-            icon: Icon(Icons.shopping_cart),
+            icon: const Icon(Icons.shopping_cart),
             onPressed: () {
               Navigator.push(
                 context,
