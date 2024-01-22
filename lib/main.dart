@@ -4,8 +4,12 @@ import 'apiCalls.dart';
 import 'favouriteProducts.dart';
 import 'productDetailsPage.dart';
 import 'package:flutter_barcode_scanner/flutter_barcode_scanner.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-void main() {
+void main() async {
+  print('loading .env file');
+  await dotenv.load();
+  print('loaded .env file');
   runApp(MyApp());
 }
 
@@ -54,7 +58,7 @@ class _MyHomePageState extends State<MyHomePage> {
           productId: productId,
           title: title,
           price: price,
-          img: 'http://82.98.132.218:6587/images/' + productId + '.jpg',
+          img: (dotenv.env['IMGURL'] ?? '') + productId + '.jpg',
         );
 
         gProductsToShow.add(newProduct);
@@ -108,7 +112,7 @@ class _MyHomePageState extends State<MyHomePage> {
             },
           ),
           IconButton(
-            icon: Icon(Icons.star),
+            icon: const Icon(Icons.star),
             onPressed: () {
               Navigator.push(
                 context,
@@ -189,9 +193,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                 fit: BoxFit.cover,
                               ),
                             ),
-                            SizedBox(
-                                width:
-                                    10), // Add some space between the image and the text
+                            const SizedBox( width: 10 ), // Add some space between the image and the text
                             Expanded(
                               // Use Expanded to prevent overflow of text
                               child: Column(
