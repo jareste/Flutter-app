@@ -6,17 +6,17 @@ import 'productDetailsPage.dart';
 import 'package:flutter_barcode_scanner/flutter_barcode_scanner.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'dart:math';
+import 'shoppingCart.dart';
 
 void main() async {
-  print('loading .env file');
   await dotenv.load();
-  print('loaded .env file');
   runApp(MyApp());
 }
 
 List<Product> gProductsToShow = [];
 List<Product> gFavoriteProducts = [];
 String gOrden = 'codigoasc';
+List<CartItem> gShoppingCart = [];
 
 class MyApp extends StatelessWidget {
   @override
@@ -160,6 +160,15 @@ class _MyHomePageState extends State<MyHomePage> {
               }).toList();
             },
           ),
+          IconButton(
+  icon: Icon(Icons.shopping_cart),
+  onPressed: () {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => ShoppingCartPage()),
+    );
+  },
+)
         ],
       ),
       body: Column(
@@ -178,8 +187,7 @@ class _MyHomePageState extends State<MyHomePage> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) =>
-                                  ProductDetailsPage(product: product),
+                              builder: (context) => ProductDetailsPage(product: product),
                             ),
                           );
                         },
