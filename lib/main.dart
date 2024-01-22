@@ -18,16 +18,40 @@ List<Product> gFavoriteProducts = [];
 String gOrden = 'codigoasc';
 List<CartItem> gShoppingCart = [];
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
+  @override
+  _MyAppState createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  ThemeMode _themeMode = ThemeMode.light;
+
+  void _toggleTheme() {
+    setState(() {
+      if (_themeMode == ThemeMode.light) {
+        _themeMode = ThemeMode.dark;
+      } else {
+        _themeMode = ThemeMode.light;
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: MyHomePage(),
+      themeMode: _themeMode,
+      darkTheme: ThemeData.dark(), // Provide your dark theme here
+      theme: ThemeData.light(), // Provide your light theme here
+      home: MyHomePage(toggleTheme: _toggleTheme),
     );
   }
 }
 
 class MyHomePage extends StatefulWidget {
+  final Function toggleTheme;
+
+  MyHomePage({required this.toggleTheme});
+
   @override
   _MyHomePageState createState() => _MyHomePageState();
 }
@@ -161,14 +185,20 @@ class _MyHomePageState extends State<MyHomePage> {
             },
           ),
           IconButton(
-  icon: Icon(Icons.shopping_cart),
-  onPressed: () {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => ShoppingCartPage()),
-    );
-  },
-)
+            icon: Icon(Icons.brightness_6),
+            onPressed: () {
+              widget.toggleTheme();
+            },
+          ),
+          IconButton(
+            icon: Icon(Icons.shopping_cart),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => ShoppingCartPage()),
+              );
+            },
+          ),
         ],
       ),
       body: Column(
