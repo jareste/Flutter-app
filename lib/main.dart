@@ -118,13 +118,13 @@ class _MyHomePageState extends State<MyHomePage> {
           IconButton(
             icon: const Icon(Icons.qr_code_scanner),
             onPressed: () async {
-              /*String barcodeScanRes = await FlutterBarcodeScanner.scanBarcode(
+              String barcodeScanRes = await FlutterBarcodeScanner.scanBarcode(
                 "#ff6666", 
                 "Cancel", 
                 true, 
                 ScanMode.BARCODE
-              );*/
-              String barcodeScanRes = "00002";
+              );
+              //String barcodeScanRes = "00002";
               //comment upper line to test with real barcode scanner
               Product product = await ApiService.fetchBarCode(barcodeScanRes);
               Navigator.push(
