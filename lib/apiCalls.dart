@@ -4,10 +4,8 @@ import 'product.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class ApiService {
-  static Future<Map<String, dynamic>> fetchData(
-      String productId, String orden) async {
-    // Define your custom headers
-    String apiKey = dotenv.env['APIKEY'] ?? '' ;
+  static Future<List<Product>> fetchData(String productId, String orden) async {
+    String apiKey = dotenv.env['APIKEY'] ?? '';
     Map<String, String> headers = {
       'Content-Type': 'application/json',
       'token': apiKey,
@@ -22,8 +20,10 @@ class ApiService {
     if (response.statusCode == 200) {
       print('Response:');
       print(response.body);
-      Map<String, dynamic> data = json.decode(response.body);
-      return data;
+      List<dynamic> dataList = json.decode(response.body)['data'];
+      List<Product> products =
+          dataList.map<Product>((item) => Product.fromJson(item)).toList();
+      return products;
     } else {
       throw Exception(
           'Failed to load data. Status code: ${response.statusCode}');
@@ -31,7 +31,7 @@ class ApiService {
   }
 
   static Future<Product> fetchBarCode(String productID) async {
-    String apiKey = dotenv.env['APIKEY'] ?? '' ;
+    String apiKey = dotenv.env['APIKEY'] ?? '';
     Map<String, String> headers = {
       'Content-Type': 'application/json',
       'token': apiKey,

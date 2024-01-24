@@ -42,12 +42,10 @@ class _FavoriteProductsPageState extends State<FavoriteProductsPage> {
                     fit: BoxFit.cover,
                   ),
                 ),
-                const SizedBox(width: 10), // Add some space between the image and the text
+                const SizedBox(width: 10),
                 Expanded(
-                  // Use Expanded to prevent overflow of text
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    //mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,

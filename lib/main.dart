@@ -7,6 +7,8 @@ import 'package:flutter_barcode_scanner/flutter_barcode_scanner.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'dart:math';
 import 'shoppingCart.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
 
 void main() async {
   await dotenv.load();
@@ -17,10 +19,46 @@ List<Product> gProductsToShow = [];
 List<Product> gFavoriteProducts = [];
 String gOrden = 'codigoasc';
 List<CartItem> gShoppingCart = [];
+List<Product> gAllProducts = [];
 
 class MyApp extends StatefulWidget {
   @override
   _MyAppState createState() => _MyAppState();
+}
+
+Future<List<Product>> getStoredProducts() async {
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  String? storedProductsJson = prefs.getString('products');
+  if (storedProductsJson != null) {
+    List<dynamic> storedProductsList = jsonDecode(storedProductsJson);
+    return storedProductsList.map((item) => Product.fromJson(item)).toList();
+  } else {
+    return [];
+  }
+}
+
+Future<DateTime?> getLastRequestTime() async {
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  int? lastRequestMillis = prefs.getInt('lastRequestTime');
+  if (lastRequestMillis != null) {
+    return null;
+    //descomentar para que sea valido
+    // return DateTime.fromMillisecondsSinceEpoch(lastRequestMillis);
+  } else {
+    return null;
+  }
+}
+
+Future<void> storeProducts(List<Product> products) async {
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  String productsJson =
+      jsonEncode(products.map((item) => item.toJson()).toList());
+  await prefs.setString('products', productsJson);
+}
+
+Future<void> storeLastRequestTime(DateTime time) async {
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  await prefs.setInt('lastRequestTime', time.millisecondsSinceEpoch);
 }
 
 class _MyAppState extends State<MyApp> {
@@ -37,12 +75,54 @@ class _MyAppState extends State<MyApp> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    updateProductsIfNeeded();
+  }
+
+  Future<void> updateProductsIfNeeded() async {
+    DateTime? lastRequestTime = await getLastRequestTime();
+    if (lastRequestTime == null ||
+        DateTime.now().difference(lastRequestTime) > Duration(minutes: 30)) {
+      try {
+        List<Product> products = await ApiService.fetchData('', gOrden);
+        gAllProducts = products;
+        gProductsToShow = List.from(gAllProducts);
+        await storeProducts(products);
+        await storeLastRequestTime(DateTime.now());
+      } catch (e) {
+        print('Failed to fetch products: $e');
+        gAllProducts = await getStoredProducts();
+        gProductsToShow = List.from(gAllProducts);
+      }
+    } else {
+      gAllProducts = await getStoredProducts();
+      gProductsToShow = List.from(gAllProducts);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      themeMode: _themeMode,
-      darkTheme: ThemeData.dark(), // Provide your dark theme here
-      theme: ThemeData.light(), // Provide your light theme here
-      home: MyHomePage(toggleTheme: _toggleTheme),
+    return FutureBuilder(
+      future: updateProductsIfNeeded(),
+      builder: (BuildContext context, AsyncSnapshot<void> snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return MaterialApp(
+            home: Scaffold(
+              body: Center(
+                child: CircularProgressIndicator(),
+              ),
+            ),
+          );
+        } else {
+          return MaterialApp(
+            themeMode: _themeMode,
+            darkTheme: ThemeData.dark(),
+            theme: ThemeData.light(),
+            home: MyHomePage(toggleTheme: _toggleTheme),
+          );
+        }
+      },
     );
   }
 }
@@ -63,36 +143,6 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   void initState() {
     super.initState();
-    // Call fetchData once at the beginning to load all products
-    _fetchData('');
-  }
-
-  // Define a separate function for fetching data
-  Future<void> _fetchData(String productId) async {
-    try {
-      var response = await ApiService.fetchData(productId, gOrden);
-      List<dynamic> products = response['data'];
-      gProductsToShow.clear();
-
-      for (var product in products) {
-        var productId = product['CodigoProducto'];
-        var title = product['Titulo'];
-        var price = product['Precio'];
-
-        var newProduct = Product(
-          productId: productId,
-          title: title,
-          price: price,
-          img: (dotenv.env['IMGURL'] ?? '') + productId + '.jpg',
-        );
-
-        gProductsToShow.add(newProduct);
-      }
-
-      setState(() {});
-    } catch (error) {
-      print('Error fetching data: $error');
-    }
   }
 
   @override
@@ -104,26 +154,23 @@ class _MyHomePageState extends State<MyHomePage> {
           decoration: const InputDecoration(
             hintText: 'GENEK test. Click to search...',
             border: InputBorder.none,
-            hintStyle: TextStyle(color: Colors.black),
+            hintStyle: TextStyle(color: Color.fromARGB(255, 0, 148, 57)),
           ),
-          style: const TextStyle(color: Colors.deepPurple),
+          style: const TextStyle(color: Color.fromARGB(255, 0, 148, 57)),
           onChanged: (value) {
-            // Trigger API call with the content of the TextField after a short delay
-            Future.delayed(const Duration(milliseconds: 500), () {
-              _fetchData(value);
+            setState(() {
+              gProductsToShow = gAllProducts.where((product) {
+                return product.title.toLowerCase().contains(value.toLowerCase()) || product.productId.toLowerCase().contains(value.toLowerCase());
+              }).toList();
             });
-          },
+          }
         ),
         actions: <Widget>[
           IconButton(
             icon: const Icon(Icons.qr_code_scanner),
             onPressed: () async {
               String barcodeScanRes = await FlutterBarcodeScanner.scanBarcode(
-                "#ff6666", 
-                "Cancel", 
-                true, 
-                ScanMode.BARCODE
-              );
+                  "#ff6666", "Cancel", true, ScanMode.BARCODE);
               //String barcodeScanRes = "00002";
               //comment upper line to test with real barcode scanner
               Product product = await ApiService.fetchBarCode(barcodeScanRes);
@@ -159,11 +206,13 @@ class _MyHomePageState extends State<MyHomePage> {
                 switch (value) {
                   case '1-9':
                     gOrden = 'codigoasc';
-                    gProductsToShow.sort((a, b) => a.productId.compareTo(b.productId));
+                    gProductsToShow
+                        .sort((a, b) => a.productId.compareTo(b.productId));
                     break;
                   case '9-1':
                     gOrden = 'codigodesc';
-                    gProductsToShow.sort((a, b) => b.productId.compareTo(a.productId));
+                    gProductsToShow
+                        .sort((a, b) => b.productId.compareTo(a.productId));
                     break;
                   case 'A-Z':
                     gOrden = 'tituloasc';
@@ -177,8 +226,7 @@ class _MyHomePageState extends State<MyHomePage> {
               });
             },
             itemBuilder: (BuildContext context) {
-              return ['1-9', '9-1', 'A-Z', 'Z-A']
-                  .map((String choice) {
+              return ['1-9', '9-1', 'A-Z', 'Z-A'].map((String choice) {
                 return PopupMenuItem<String>(
                   value: choice,
                   child: Text(choice),
@@ -192,7 +240,6 @@ class _MyHomePageState extends State<MyHomePage> {
               widget.toggleTheme();
             },
           ),
-          
           IconButton(
             icon: const Icon(Icons.shopping_cart),
             onPressed: () {
@@ -220,7 +267,8 @@ class _MyHomePageState extends State<MyHomePage> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => ProductDetailsPage(product: product),
+                              builder: (context) =>
+                                  ProductDetailsPage(product: product),
                             ),
                           );
                         },
@@ -233,18 +281,19 @@ class _MyHomePageState extends State<MyHomePage> {
                               child: Image.network(
                                 product.img,
                                 fit: BoxFit.cover,
-                                errorBuilder: (BuildContext context, Object exception, StackTrace? stackTrace) {
-                                  int defaultImageIndex = Random().nextInt(7) + 1;
-                                  return Image.asset('assets/images/peepo$defaultImageIndex.jpg');
+                                errorBuilder: (BuildContext context,
+                                    Object exception, StackTrace? stackTrace) {
+                                  int defaultImageIndex =
+                                      Random().nextInt(7) + 1;
+                                  return Image.asset(
+                                      'assets/images/peepo$defaultImageIndex.jpg');
                                 },
                               ),
                             ),
-                            const SizedBox( width: 10 ), // Add some space between the image and the text
+                            const SizedBox(width:10),
                             Expanded(
-                              // Use Expanded to prevent overflow of text
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
-                                //mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
                                   Column(
                                     crossAxisAlignment:
