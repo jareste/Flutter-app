@@ -10,11 +10,8 @@ The app it's a simple app that's doing api requests to get the products to show.
 - A way to scan barcodes and search for an specific product.
 - Whatever I wanted to add.
 
+How I've done it:
 
-I decided to add:
+First of all I've started by doing a working app that was doing all the time api request and directly show on screen the api response. Later I decided to store the products on the mobile storage in order to do less api petitions and also to be able to work and use the app without internet, this was a big improve.
 
-- Favourite's list, it includes a star that comes with each product and its filled if you already starred it and white if you still dont. with an option to see all your products marked as favourites.
-- Price display order.
-
-
-I was thinking on instead of asking the api each time i want to do a search store all the values local and once each day or each X hours i'm searching execute the api petition to prevent the api being down or not having connexion, but i was not able to do it as the only way i found to test was launching the app on a phisical device and then I encountered the issue of needing the api to be https for android policies.
+I also decided to add some extra functionalities like a favourites list and a shopping cart where you can add products and remove them.

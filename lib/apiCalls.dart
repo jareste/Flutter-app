@@ -12,8 +12,7 @@ class ApiService {
     };
     final response = await http.get(
       //orden values = codigoasc,codigodesc,tituloasc,titulodesc
-      Uri.parse(
-          (dotenv.env['APISEARCH'] ?? '') + '${productId}&orden=${orden}'),
+      Uri.parse((dotenv.env['APISEARCH'] ?? '') + '${productId}&orden=${orden}'),
       headers: headers,
     );
 
@@ -38,7 +37,7 @@ class ApiService {
     };
     final response = await http.get(
       //orden values = codigoasc,codigodesc,tituloasc,titulodesc
-      Uri.parse('http://82.98.132.218:6587/api/productos?buscar=$productID'),
+      Uri.parse((dotenv.env['APISEARCH'] ?? '') + productID),
       headers: headers,
     );
 

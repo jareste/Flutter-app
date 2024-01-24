@@ -150,38 +150,60 @@ class _MyHomePageState extends State<MyHomePage> {
     return Scaffold(
       appBar: AppBar(
         title: TextField(
-          controller: messageController,
-          decoration: const InputDecoration(
-            hintText: 'GENEK test. Click to search...',
-            border: InputBorder.none,
-            hintStyle: TextStyle(color: Color.fromARGB(255, 0, 148, 57)),
-          ),
-          style: const TextStyle(color: Color.fromARGB(255, 0, 148, 57)),
-          onChanged: (value) {
-            setState(() {
-              gProductsToShow = gAllProducts.where((product) {
-                return product.title.toLowerCase().contains(value.toLowerCase()) || product.productId.toLowerCase().contains(value.toLowerCase());
-              }).toList();
-            });
-          }
-        ),
+            controller: messageController,
+            decoration: const InputDecoration(
+              hintText: 'GENEK test. Click to search...',
+              border: InputBorder.none,
+              hintStyle: TextStyle(color: Color.fromARGB(255, 0, 148, 57)),
+            ),
+            style: const TextStyle(color: Color.fromARGB(255, 0, 148, 57)),
+            onChanged: (value) {
+              setState(() {
+                gProductsToShow = gAllProducts.where((product) {
+                  return product.title
+                          .toLowerCase()
+                          .contains(value.toLowerCase()) ||
+                      product.productId
+                          .toLowerCase()
+                          .contains(value.toLowerCase());
+                }).toList();
+              });
+            }),
         actions: <Widget>[
           IconButton(
             icon: const Icon(Icons.qr_code_scanner),
             onPressed: () async {
               String barcodeScanRes = await FlutterBarcodeScanner.scanBarcode(
                   "#ff6666", "Cancel", true, ScanMode.BARCODE);
-              //String barcodeScanRes = "00002";
-              //comment upper line to test with real barcode scanner
-              Product product = await ApiService.fetchBarCode(barcodeScanRes);
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => ProductDetailsPage(product: product),
-                ),
-              );
-              print(barcodeScanRes);
-            },
+              print('barcode----------------------------------$barcodeScanRes');
+              try {
+                Product product = await ApiService.fetchBarCode(barcodeScanRes);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ProductDetailsPage(product: product),
+                  ),
+                );
+              } catch (e) {
+                showDialog(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return AlertDialog(
+                      title: Text('Error'),
+                      content: Text('Invalid barcode'),
+                      actions: <Widget>[
+                        TextButton(
+                          child: Text('OK'),
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                          },
+                        ),
+                      ],
+                    );
+                  },
+                );
+              }
+            }
           ),
           IconButton(
             icon: const Icon(Icons.star),
@@ -290,7 +312,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                 },
                               ),
                             ),
-                            const SizedBox(width:10),
+                            const SizedBox(width: 10),
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
